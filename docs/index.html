@@ -1,417 +1,89 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>iPadOS 26 Beta UI with Folder & App Preview</title>
-<style>
-  body {
-    margin: 0; 
-    background: linear-gradient(135deg, #a0c3ff, #5061a8);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    color: white;
-    user-select: none;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Dynamic Notch Demo</title>
+  <link rel="apple-touch-icon" href="icon.png" />
+  <meta name="apple-mobile-web-app-title" content="노치섬 어드벤처" />
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      padding-top: 40px;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
 
-  /* 상단 상태바 */
-  .status-bar {
-    height: 44px;
-    padding: 0 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: 600;
-    font-size: 14px;
-    background: rgba(255 255 255 / 0.15);
-    backdrop-filter: blur(12px);
-  }
-  .status-left, .status-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .icon-battery {
-    width: 24px; height: 12px;
-    border: 2px solid white;
-    border-radius: 3px;
-    position: relative;
-  }
-  .icon-battery::after {
-    content: "";
-    position: absolute;
-    top: 3px; right: -6px;
-    width: 4px; height: 6px;
-    background: white;
-    border-radius: 2px;
-  }
-  .battery-level {
-    position: absolute;
-    top: 2px; left: 2px;
-    width: 60%;
-    height: 8px;
-    background: #4cd964;
-    border-radius: 1px;
-  }
-  .icon-wifi, .icon-signal {
-    width: 18px; height: 12px;
-    position: relative;
-  }
-  .icon-wifi svg, .icon-signal svg {
-    fill: white;
-    width: 100%;
-    height: 100%;
-  }
+    .island {
+      position: relative;
+      background: black;
+      width: 120px;
+      height: 35px;
+      border-radius: 20px;
+      transition: all 0.4s ease;
+      box-shadow: 0 0 10px rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
 
-  /* 홈 화면 컨테이너 */
-  .home-screen {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 100px;
-    gap: 22px 22px;
-    padding: 30px 20px 120px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+    .island.expanded {
+      width: 240px;
+      height: 80px;
+      border-radius: 30px;
+    }
 
-  /* 앱 아이콘 */
-  .app-icon {
-    background: rgba(255 255 255 / 0.15);
-    backdrop-filter: blur(16px);
-    border-radius: 26px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.25s ease;
-    position: relative;
-  }
-  .app-icon:hover {
-    background: rgba(255 255 255 / 0.30);
-  }
-  .app-icon img {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 8px;
-    border-radius: 14px;
-  }
-  .app-label {
-    font-size: 14px;
-    font-weight: 500;
-    color: white;
-    text-shadow: 0 0 3px rgba(0,0,0,0.7);
-    user-select: none;
-  }
+    .content {
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
 
-  /* 하단 독 (dock) */
-  .dock {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255 255 255 / 0.18);
-    backdrop-filter: blur(24px);
-    border-radius: 40px;
-    padding: 12px 30px;
-    display: flex;
-    gap: 30px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-    z-index: 10;
-  }
-  .dock .app-icon {
-    background: rgba(255 255 255 / 0.3);
-  }
-
-  /* 폴더 스타일 */
-  .folder {
-    position: relative;
-    width: 70px;
-    height: 70px;
-    background: rgba(255 255 255 / 0.25);
-    border-radius: 22px;
-    cursor: pointer;
-    display: flex;
-    flex-wrap: wrap;
-    padding: 6px;
-    gap: 6px;
-    box-sizing: border-box;
-  }
-  .folder .mini-app {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    background: rgba(255 255 255 / 0.7);
-  }
-  .folder:hover {
-    background: rgba(255 255 255 / 0.4);
-  }
-
-  /* 폴더 열림 상태 */
-  .folder-expanded {
-    position: fixed;
-    bottom: 90px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 320px;
-    background: rgba(255 255 255 / 0.85);
-    border-radius: 28px;
-    padding: 20px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-    z-index: 20;
-  }
-  .folder-expanded .app-icon {
-    background: rgba(0 0 0 / 0.1);
-  }
-  .folder-expanded .app-label {
-    color: #111;
-    text-shadow: none;
-  }
-
-  /* 앱 미리보기 창 */
-  .app-preview {
-    position: fixed;
-    top: 15vh;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 360px;
-    height: 480px;
-    background: white;
-    border-radius: 30px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    z-index: 30;
-    transition: width 0.3s ease, height 0.3s ease;
-  }
-  .app-preview.minimized {
-    height: 60px;
-    width: 180px;
-    border-radius: 30px;
-    overflow: visible;
-  }
-  .app-preview-header {
-    background: #007aff;
-    color: white;
-    padding: 12px 20px;
-    font-weight: 600;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .app-preview-title {
-    font-size: 18px;
-    user-select: none;
-  }
-  .preview-controls {
-    display: flex;
-    gap: 10px;
-  }
-  .control-btn {
-    width: 24px;
-    height: 24px;
-    background: white;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #007aff;
-    font-weight: bold;
-    font-size: 18px;
-    line-height: 1;
-    user-select: none;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: background 0.25s ease;
-  }
-  .control-btn:hover {
-    background: #e0e0e0;
-  }
-  .app-preview-content {
-    flex: 1;
-    background: #f2f2f7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: #555;
-    user-select: none;
-  }
-</style>
+    .island.expanded .content {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  </style>
 </head>
 <body>
-
-  <div class="status-bar">
-    <div class="status-left">
-      <span>9:41 AM</span>
-    </div>
-    <div class="status-right">
-      <div class="icon-signal">
-        <svg viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg"><path d="M0 13h3v-7H0v7zm4 0h3v-4H4v4zm4 0h3v-10H8v10zm4 0h3V0h-3v13z"/></svg>
-      </div>
-      <div class="icon-wifi">
-        <svg viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg"><path d="M10 12a2 2 0 0 0 2-2H8a2 2 0 0 0 2 2zm0-9a7 7 0 0 1 7 7h-2a5 5 0 0 0-10 0H3a7 7 0 0 1 7-7z"/></svg>
-      </div>
-      <div class="icon-battery">
-        <div class="battery-level"></div>
-      </div>
+  <div class="island" id="island">
+    <span id="defaultText">🔔</span>
+    <div class="content" id="content">
+      📦 새로운 알림이 도착했습니다!
     </div>
   </div>
 
-  <div class="home-screen" id="homeScreen">
-    <div class="app-icon" data-app="메모">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/note.png" alt="메모" />
-      <div class="app-label">메모</div>
-    </div>
-    <div class="app-icon" data-app="지도">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/map.png" alt="지도" />
-      <div class="app-label">지도</div>
-    </div>
-    <div class="app-icon" data-app="캘린더">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/calendar.png" alt="캘린더" />
-      <div class="app-label">캘린더</div>
-    </div>
-    <div class="app-icon" data-app="설정">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/settings.png" alt="설정" />
-      <div class="app-label">설정</div>
-    </div>
-  </div>
+  <script>
+    const island = document.getElementById('island');
+    const defaultText = document.getElementById('defaultText');
+    const content = document.getElementById('content');
 
-  <div class="dock">
-    <div class="app-icon" data-app="사파리">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/internet--v1.png" alt="사파리" />
-      <div class="app-label">사파리</div>
-    </div>
+    let expanded = false;
+    let timeout;
 
-    <!-- 폴더 아이콘 -->
-    <div class="folder" id="folderIcon" title="폴더 열기">
-      <div class="mini-app"></div>
-      <div class="mini-app"></div>
-      <div class="mini-app"></div>
-      <div class="mini-app"></div>
-    </div>
+    island.addEventListener('click', () => {
+      expanded = !expanded;
+      island.classList.toggle('expanded', expanded);
 
-    <div class="app-icon" data-app="메일">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/new-post.png" alt="메일" />
-      <div class="app-label">메일</div>
-    </div>
-  </div>
-
-  <!-- 폴더 열림 창 -->
-  <div class="folder-expanded" id="folderExpanded" style="display:none;">
-    <div class="app-icon" data-app="유튜브">
-      <img src="https://img.icons8.com/ios-filled/50/000000/youtube-play.png" alt="유튜브" />
-      <div class="app-label" style="color:#000;">유튜브</div>
-    </div>
-    <div class="app-icon" data-app="뮤직">
-      <img src="https://img.icons8.com/ios-filled/50/000000/musical-notes.png" alt="뮤직" />
-      <div class="app-label" style="color:#000;">뮤직</div>
-    </div>
-    <div class="app-icon" data-app="페이스북">
-      <img src="https://img.icons8.com/ios-filled/50/000000/facebook-new.png" alt="페이스북" />
-      <div class="app-label" style="color:#000;">페이스북</div>
-    </div>
-    <div class="app-icon" data-app="트위터">
-      <img src="https://img.icons8.com/ios-filled/50/000000/twitter.png" alt="트위터" />
-      <div class="app-label" style="color:#000;">트위터</div>
-    </div>
-  </div>
-
-  <!-- 앱 미리보기 -->
-  <div class="app-preview" id="appPreview" style="display:none;">
-    <div class="app-preview-header">
-      <div class="app-preview-title" id="previewTitle">앱 이름</div>
-      <div class="preview-controls">
-        <div class="control-btn" id="minimizeBtn" title="최소화">_</div>
-        <div class="control-btn" id="maximizeBtn" title="최대화">□</div>
-        <div class="control-btn" id="closeBtn" title="닫기">×</div>
-      </div>
-    </div>
-    <div class="app-preview-content" id="previewContent">
-      앱 미리보기 영역
-    </div>
-  </div>
-
-<script>
-  const folderIcon = document.getElementById('folderIcon');
-  const folderExpanded = document.getElementById('folderExpanded');
-  const appPreview = document.getElementById('appPreview');
-  const previewTitle = document.getElementById('previewTitle');
-  const previewContent = document.getElementById('previewContent');
-  const minimizeBtn = document.getElementById('minimizeBtn');
-  const maximizeBtn = document.getElementById('maximizeBtn');
-  const closeBtn = document.getElementById('closeBtn');
-
-  // 폴더 열기/닫기 토글
-  folderIcon.addEventListener('click', () => {
-    if (folderExpanded.style.display === 'none') {
-      folderExpanded.style.display = 'grid';
-    } else {
-      folderExpanded.style.display = 'none';
-    }
-  });
-
-  // 폴더 안 앱 클릭 시 미리보기 열기
-  folderExpanded.querySelectorAll('.app-icon').forEach(app => {
-    app.addEventListener('click', () => {
-      previewTitle.textContent = app.getAttribute('data-app');
-      previewContent.textContent = `${app.getAttribute('data-app')} 앱 미리보기 영역입니다.`;
-      appPreview.style.display = 'flex';
-      folderExpanded.style.display = 'none';
-      appPreview.classList.remove('minimized');
+      if (expanded) {
+        timeout = setTimeout(() => {
+          island.classList.remove('expanded');
+          expanded = false;
+        }, 3000); // 자동으로 3초 뒤 닫힘
+      } else {
+        clearTimeout(timeout);
+      }
     });
-  });
-
-  // 홈 화면 앱 아이콘 클릭 시 미리보기 열기
-  document.getElementById('homeScreen').querySelectorAll('.app-icon').forEach(app => {
-    app.addEventListener('click', () => {
-      previewTitle.textContent = app.getAttribute('data-app');
-      previewContent.textContent = `${app.getAttribute('data-app')} 앱 미리보기 영역입니다.`;
-      appPreview.style.display = 'flex';
-      appPreview.classList.remove('minimized');
-    });
-  });
-
-  // 독 앱 아이콘 클릭 시 미리보기 열기
-  document.querySelectorAll('.dock .app-icon').forEach(app => {
-    app.addEventListener('click', () => {
-      previewTitle.textContent = app.getAttribute('data-app');
-      previewContent.textContent = `${app.getAttribute('data-app')} 앱 미리보기 영역입니다.`;
-      appPreview.style.display = 'flex';
-      appPreview.classList.remove('minimized');
-      folderExpanded.style.display = 'none';
-    });
-  });
-
-  // 미리보기 닫기
-  closeBtn.addEventListener('click', () => {
-    appPreview.style.display = 'none';
-  });
-
-  // 미리보기 최소화
-  minimizeBtn.addEventListener('click', () => {
-    appPreview.classList.add('minimized');
-  });
-
-  // 미리보기 최대화
-  maximizeBtn.addEventListener('click', () => {
-    appPreview.classList.remove('minimized');
-  });
-
-  // 바깥 클릭시 폴더 닫기
-  document.addEventListener('click', (e) => {
-    if (!folderExpanded.contains(e.target) && !folderIcon.contains(e.target)) {
-      folderExpanded.style.display = 'none';
-    }
-  });
-</script>
-
+  </script>
 </body>
 </html>
