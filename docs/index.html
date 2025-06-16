@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>노치와 하나 되기</title>
+  <title>노치섬 어드벤처</title>
   <link rel="apple-touch-icon" href="icon.png" />
-  <meta name="apple-mobile-web-app-title" content="노치 어드벤처" />
+  <meta name="apple-mobile-web-app-title" content="노치섬 어드벤처" />
   <style>
     html, body {
       margin: 0;
@@ -20,7 +20,7 @@
 
     .island {
       position: fixed;
-      top: env(safe-area-inset-top, 0);
+      top: 0;
       left: 50%;
       transform: translateX(-50%);
       background: black;
@@ -35,7 +35,7 @@
       font-size: 14px;
       transition: all 0.4s ease;
       z-index: 9999;
-      margin-top: 5px;
+      padding-top: env(safe-area-inset-top);
     }
 
     .island.expanded {
@@ -68,9 +68,9 @@
 </head>
 <body>
   <div class="island" id="island">
-    <span id="defaultText">🔔</span>
+    <span id="defaultText">🎉</span>
     <div class="content" id="content">
-      🚀 알림 도착!<br>맥이 곧 도착합니다.
+      🥳 축하합니다!<br>노치와 친구가 되셨습니다.
     </div>
   </div>
 
