@@ -5,36 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Dynamic Notch Demo</title>
+  <title>노치와 하나 되기</title>
   <link rel="apple-touch-icon" href="icon.png" />
-  <meta name="apple-mobile-web-app-title" content="노치섬 어드벤처" />
+  <meta name="apple-mobile-web-app-title" content="노치 어드벤처" />
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
       background: #111;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: start;
-      padding-top: 40px;
-      overflow: hidden;
+      height: 100%;
       font-family: sans-serif;
+      overflow: hidden;
     }
 
     .island {
-      position: relative;
+      position: fixed;
+      top: env(safe-area-inset-top, 0);
+      left: 50%;
+      transform: translateX(-50%);
       background: black;
-      width: 120px;
-      height: 35px;
+      width: 130px;
+      height: 38px;
       border-radius: 20px;
-      transition: all 0.4s ease;
-      box-shadow: 0 0 10px rgba(0,0,0,0.6);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       color: white;
       font-size: 14px;
-      cursor: pointer;
+      transition: all 0.4s ease;
+      z-index: 9999;
+      margin-top: 5px;
     }
 
     .island.expanded {
@@ -47,11 +48,21 @@
       opacity: 0;
       transition: opacity 0.3s;
       pointer-events: none;
+      text-align: center;
+      padding: 10px;
     }
 
     .island.expanded .content {
       opacity: 1;
       pointer-events: auto;
+    }
+
+    #defaultText {
+      transition: opacity 0.3s;
+    }
+
+    .island.expanded #defaultText {
+      opacity: 0;
     }
   </style>
 </head>
@@ -59,7 +70,7 @@
   <div class="island" id="island">
     <span id="defaultText">🔔</span>
     <div class="content" id="content">
-      📦 새로운 알림이 도착했습니다!
+      🚀 알림 도착!<br>맥이 곧 도착합니다.
     </div>
   </div>
 
@@ -79,7 +90,7 @@
         timeout = setTimeout(() => {
           island.classList.remove('expanded');
           expanded = false;
-        }, 3000); // 자동으로 3초 뒤 닫힘
+        }, 3000);
       } else {
         clearTimeout(timeout);
       }
